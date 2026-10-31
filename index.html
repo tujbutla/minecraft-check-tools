@@ -390,7 +390,7 @@
             </div>
 
             <div class="pt-4 border-t border-mc-border/80">
-              <!-- Ссылка ведет на прямой файл Client.exe, который вы загрузили в репозиторий -->
+              <!-- Ссылка ведет на прямой файл Client.exe в репозитории -->
               <a 
                 href="./Client.exe" 
                 download="Client.exe"
@@ -568,4 +568,194 @@
         <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400">
           <a href="https://www.voidtools.com" target="_blank" rel="noopener noreferrer" class="hover:text-mc-green transition-colors">voidtools</a>
           <a href="https://ericzimmerman.github.io/" target="_blank" rel="noopener noreferrer" class="hover:text-mc-green transition-colors">Eric Zimmerman Tools</a>
-          <a href="https://www.nirsoft.net" target="_blank" rel="noopener noreferrer" class="hover:
+          <a href="https://www.nirsoft.net" target="_blank" rel="noopener noreferrer" class="hover:text-mc-green transition-colors">NirSoft Utilities</a>
+          <a href="#hero" class="hover:text-mc-green transition-colors">Наверх ↑</a>
+        </div>
+
+      </div>
+
+      <div class="pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+        <p class="max-w-2xl text-center md:text-left">
+          <strong>Дисклеймер:</strong> Все программы являются собственностью их законных авторов (voidtools, Eric Zimmerman, NirSoft). Сайт не распространяет модифицированное ПО и предоставляет прямые ссылки исключительно на оригинальные официальные дистрибутивы.
+        </p>
+        <p class="whitespace-nowrap font-mono text-[11px]">
+          &copy; 2026 Minecraft Check Tools. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function playMinecraftClick() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (audioCtx) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.04);
+        }
+      } catch (e) {}
+    }
+
+    const soundBtn = document.getElementById('sound-toggle-btn');
+    const soundOnIcon = document.getElementById('sound-icon-on');
+    const soundOffIcon = document.getElementById('sound-icon-off');
+
+    if (soundBtn && soundOnIcon && soundOffIcon) {
+      soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+          soundOnIcon.classList.remove('hidden');
+          soundOffIcon.classList.add('hidden');
+          playMinecraftClick();
+          showToast('Звуковые эффекты включены', 'Клик интерфейса активирован');
+        } else {
+          soundOnIcon.classList.add('hidden');
+          soundOffIcon.classList.remove('hidden');
+          showToast('Звуковые эффекты выключены', 'Звуки интерфейса отключены');
+        }
+      });
+    }
+
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('click', () => {
+        playMinecraftClick();
+      });
+    });
+
+    const toast = document.getElementById('toast-notification');
+    const toastTitle = document.getElementById('toast-title');
+    const toastMsg = document.getElementById('toast-message');
+    let toastTimeout = null;
+
+    function showToast(title, message) {
+      if (!toast || !toastTitle || !toastMsg) return;
+      toastTitle.textContent = title;
+      toastMsg.textContent = message;
+      toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2500);
+    }
+
+    document.querySelectorAll('.copy-cmd-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const path = btn.getAttribute('data-path') || '';
+        if (!path) return;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(path).then(() => {
+            showToast('СКОПИРОВАНО', path);
+          }).catch(() => {
+            fallbackCopy(path);
+          });
+        } else {
+          fallbackCopy(path);
+        }
+      });
+    });
+
+    function fallbackCopy(text) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('СКОПИРОВАНО', text);
+      } catch (err) {
+        showToast('ОШИБКА', 'Не удалось скопировать текст');
+      }
+    }
+
+    const canvas = document.getElementById('particles-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let width = 0;
+      let height = 0;
+
+      function resizeCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.size = Math.random() * 2.5 + 1;
+          this.speedY = -(Math.random() * 0.4 + 0.15);
+          this.speedX = (Math.random() - 0.5) * 0.25;
+          this.opacity = Math.random() * 0.5 + 0.15;
+          this.isGreen = Math.random() > 0.3;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += this.speedX;
+          if (this.y < -10) {
+            this.y = height + 10;
+            this.x = Math.random() * width;
+          }
+          if (this.x < -10) this.x = width + 10;
+          if (this.x > width + 10) this.x = -10;
+        }
+        draw() {
+          ctx.fillStyle = this.isGreen 
+            ? `rgba(34, 197, 94, ${this.opacity})` 
+            : `rgba(56, 189, 248, ${this.opacity * 0.7})`;
+          ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.size, this.size);
+        }
+      }
+
+      const particleCount = Math.min(Math.floor(window.innerWidth / 20), 45);
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (let p of particles) {
+          p.update();
+          p.draw();
+        }
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+  </script>
+</body>
+</html>
